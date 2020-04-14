@@ -13,7 +13,7 @@ import pandas as pd
 class TwitterClient():
     def __init__(self, twitter_user=None):
         self.auth = TwitterAuthenticator().authenticate_twitter_app()
-        self.twitter_client = API(self.auth)
+        self.twitter_client = API(self.auth, wait_on_rate_limit=True)
 
         self.twitter_user = twitter_user
 
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     rate_limit = api.rate_limit_status()
 
     #tweets = api.user_timeline(screen_name="BarackObama", count=20)
-    followers = api.followers(screen_name="imyeek", count =100)
+    followers = api.followers(screen_name="imyeek")
 
     #print(dir(tweets[0]))
     #print(tweets[0].retweet_count)
