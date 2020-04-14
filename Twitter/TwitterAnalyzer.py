@@ -107,9 +107,13 @@ class TweetAnalyzer():
         return df
 
     def follower_list_finder(self,follower_ids):
-        df = pd.DataFrame(data=[follower_id.id for follower_id in follower_ids],columns= ['Follower IDS'])
+        df = pd.DataFrame(data=[follower_id.screen_name for follower_id in follower_ids],columns= ['Screen Name'])
         #df[id]
         return df
+
+    def follower_frienship_finder(self, follower_ids):
+        return (0)
+
 if __name__ == '__main__':
 
     twitter_client = TwitterClient()
@@ -117,8 +121,10 @@ if __name__ == '__main__':
 
     api = twitter_client.get_twitter_client_api()
 
+    rate_limit = api.rate_limit_status()
+
     #tweets = api.user_timeline(screen_name="BarackObama", count=20)
-    followers = api.followers(screen_name="imyeek", count =20)
+    followers = api.followers(screen_name="imyeek", count =100)
 
     #print(dir(tweets[0]))
     #print(tweets[0].retweet_count)
@@ -126,7 +132,8 @@ if __name__ == '__main__':
     #tweet_list = tweet_analyzer.tweets_to_data_frame(tweets)
     
     follower_list = tweet_analyzer.follower_list_finder(followers)
-
+    follower_list.to_csv(r'/Users/daking/Desktop/follower_list.csv', index = False)
 
     #print(tweet_list.head(10))
-    print(follower_list.head(10))
+    print(follower_list)
+    #print(rate_limit)
