@@ -1,0 +1,198 @@
+---
+title: "ThesisCode"
+output:
+  word_document: default
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+- This data was initially ported in using the read.csv() method in R, where it was converted to utilizable datasets. This included both the follower data for each of the 4
+artists, as well as the followed of the followers, given by the names "_follows" and "_friends", respectively. 
+```{r, echo = FALSE}
+library(tidyverse)
+library(lmtest)
+library(nnet)
+library(glmnet)
+
+yeek_follows <-  read_csv("~/Documents/GitHub/ThesisWork/imyeek_followers.csv")
+yeek_friends <- read_csv("~/Documents/GitHub/ThesisWork/imyeek_friends.csv")
+omar_follows <-  read_csv("~/Documents/GitHub/ThesisWork/omarapollo_followers.csv")
+omar_friends <- read_csv("~/Documents/GitHub/ThesisWork/apollo_friends.csv")
+bakar_follows <- read_csv("~/Documents/GitHub/ThesisWork/yeaabk_followers.csv")
+bakar_friends <- read_csv("~/Documents/GitHub/ThesisWork/yeaabk_friends.csv")
+dom_follows <- read_csv("~/Documents/GitHub/ThesisWork/dominic_followers.csv")
+dom_friends <- read_csv("~/Documents/GitHub/ThesisWork/dominicfike_friends.csv")
+
+```
+
+
+
+- This data was then cleaned, using the R package "dplyr" to manipulate the data, clean-up the locations of each of the individual users, as well as creating the category year_of_grad for those followers that included the year that they were graduating from any institution. A more exhaustive method of cleaning this dataset would make sure that stragglers were not missed, but that was missed this time due to time constraints. 
+```{r, echo = FALSE}
+
+yeek_follows_cleaned = as.data.frame(yeek_follows)
+yeek_follows_cleaned<-subset(yeek_follows_cleaned, location!="")
+yeek_follows_cleaned <- yeek_follows_cleaned %>% filter(grepl(",", location))
+yeek_follows_cleaned<- yeek_follows_cleaned %>% mutate(year_of_grad = ifelse(grepl("‘18",description),"2018",ifelse(grepl("‘19",description),"2019",ifelse(grepl("‘20",description),"2020",ifelse(grepl("‘21",description), 
+"2021",ifelse(grepl(" ‘22", description), "2022", ifelse(grepl("‘23", description),"2023", ifelse(grepl("'18",description),"2018",ifelse(grepl("'19",description),"2019",ifelse(grepl("'20",description),"2020",ifelse(grepl("'21",description), 
+"2021",ifelse(grepl(" '22", description), "2022", ifelse(grepl("'23", description),"2023", ifelse(grepl("18'",description),"2018",ifelse(grepl("19'",description),"2019",ifelse(grepl("20'",description),"2020",ifelse(grepl("21'",description),
+"2021",ifelse(grepl("22'", description), "2022", ifelse(grepl("23'", description),"2023", ifelse(grepl("’18",description),"2018",ifelse(grepl("’19",description),"2019",ifelse(grepl("’20",description),"2020",ifelse(grepl("’21",description), 
+"2021",ifelse(grepl(" ’22", description), "2022", ifelse(grepl("’23", description),"2023",ifelse(grepl("18’",description),"2018",ifelse(grepl("19’",description),"2019",ifelse(grepl("20’",description),"2020",ifelse(grepl("21’",description),
+"2021",ifelse(grepl("22’", description), "2022", ifelse(grepl("23’", description),"2023", "other")))))))))))))))))))))))))))))))
+
+
+
+omar_follows_cleaned = as.data.frame(omar_follows)
+omar_follows_cleaned<-subset(omar_follows_cleaned, location!="")
+omar_follows_cleaned <- omar_follows_cleaned %>% filter(grepl(",", location))
+omar_follows_cleaned<- omar_follows_cleaned %>% mutate(year_of_grad = ifelse(grepl("‘18",description),"2018",ifelse(grepl("‘19",description),"2019",ifelse(grepl("‘20",description),"2020",ifelse(grepl("‘21",description), 
+"2021",ifelse(grepl(" ‘22", description), "2022", ifelse(grepl("‘23", description),"2023", ifelse(grepl("'18",description),"2018",ifelse(grepl("'19",description),"2019",ifelse(grepl("'20",description),"2020",ifelse(grepl("'21",description), 
+"2021",ifelse(grepl(" '22", description), "2022", ifelse(grepl("'23", description),"2023", ifelse(grepl("18'",description),"2018",ifelse(grepl("19'",description),"2019",ifelse(grepl("20'",description),"2020",ifelse(grepl("21'",description),
+"2021",ifelse(grepl("22'", description), "2022", ifelse(grepl("23'", description),"2023", ifelse(grepl("’18",description),"2018",ifelse(grepl("’19",description),"2019",ifelse(grepl("’20",description),"2020",ifelse(grepl("’21",description), 
+"2021",ifelse(grepl(" ’22", description), "2022", ifelse(grepl("’23", description),"2023",ifelse(grepl("18’",description),"2018",ifelse(grepl("19’",description),"2019",ifelse(grepl("20’",description),"2020",ifelse(grepl("21’",description),
+"2021",ifelse(grepl("22’", description), "2022", ifelse(grepl("23’", description),"2023", "other")))))))))))))))))))))))))))))))
+
+dom_follows_cleaned = as.data.frame(dom_follows)
+dom_follows_cleaned<-subset(dom_follows_cleaned, location!="")
+dom_follows_cleaned <- dom_follows_cleaned %>% filter(grepl(",", location))
+dom_follows_cleaned<- dom_follows_cleaned %>% mutate(year_of_grad = ifelse(grepl("‘18",description),"2018",ifelse(grepl("‘19",description),"2019",ifelse(grepl("‘20",description),"2020",ifelse(grepl("‘21",description), 
+"2021",ifelse(grepl(" ‘22", description), "2022", ifelse(grepl("‘23", description),"2023", ifelse(grepl("'18",description),"2018",ifelse(grepl("'19",description),"2019",ifelse(grepl("'20",description),"2020",ifelse(grepl("'21",description), 
+"2021",ifelse(grepl(" '22", description), "2022", ifelse(grepl("'23", description),"2023", ifelse(grepl("18'",description),"2018",ifelse(grepl("19'",description),"2019",ifelse(grepl("20'",description),"2020",ifelse(grepl("21'",description),
+"2021",ifelse(grepl("22'", description), "2022", ifelse(grepl("23'", description),"2023", ifelse(grepl("’18",description),"2018",ifelse(grepl("’19",description),"2019",ifelse(grepl("’20",description),"2020",ifelse(grepl("’21",description), 
+"2021",ifelse(grepl(" ’22", description), "2022", ifelse(grepl("’23", description),"2023",ifelse(grepl("18’",description),"2018",ifelse(grepl("19’",description),"2019",ifelse(grepl("20’",description),"2020",ifelse(grepl("21’",description),
+"2021",ifelse(grepl("22’", description), "2022", ifelse(grepl("23’", description),"2023", "other")))))))))))))))))))))))))))))))
+
+
+bakar_follows_cleaned = as.data.frame(bakar_follows)
+bakar_follows_cleaned<-subset(bakar_follows_cleaned, location!="")
+bakar_follows_cleaned <- bakar_follows_cleaned %>% filter(grepl(",", location))
+bakar_follows_cleaned<- bakar_follows_cleaned %>%mutate(year_of_grad = ifelse(grepl("‘18",description),"2018",ifelse(grepl("‘19",description),"2019",ifelse(grepl("‘20",description),"2020",ifelse(grepl("‘21",description), 
+"2021",ifelse(grepl(" ‘22", description), "2022", ifelse(grepl("‘23", description),"2023", ifelse(grepl("'18",description),"2018",ifelse(grepl("'19",description),"2019",ifelse(grepl("'20",description),"2020",ifelse(grepl("'21",description), 
+"2021",ifelse(grepl(" '22", description), "2022", ifelse(grepl("'23", description),"2023", ifelse(grepl("18'",description),"2018",ifelse(grepl("19'",description),"2019",ifelse(grepl("20'",description),"2020",ifelse(grepl("21'",description),
+"2021",ifelse(grepl("22'", description), "2022", ifelse(grepl("23'", description),"2023", ifelse(grepl("’18",description),"2018",ifelse(grepl("’19",description),"2019",ifelse(grepl("’20",description),"2020",ifelse(grepl("’21",description), 
+"2021",ifelse(grepl(" ’22", description), "2022", ifelse(grepl("’23", description),"2023",ifelse(grepl("18’",description),"2018",ifelse(grepl("19’",description),"2019",ifelse(grepl("20’",description),"2020",ifelse(grepl("21’",description),
+"2021",ifelse(grepl("22’", description), "2022", ifelse(grepl("23’", description),"2023", "other")))))))))))))))))))))))))))))))
+```
+
+
+
+-The follower was given the variable artist_follower_of, respective of which artist they were a follower of, and then all of these datasets were merged into a singular dataset called total_follows_list.
+```{r, echo = FALSE}
+
+yeek_follows_cleaned <- yeek_follows_cleaned %>% mutate(artist_follower_of = "yeek")
+omar_follows_cleaned <- omar_follows_cleaned %>% mutate(artist_follower_of = "omar")
+dom_follows_cleaned <- dom_follows_cleaned %>% mutate(artist_follower_of = "dom")
+bakar_follows_cleaned <- bakar_follows_cleaned %>% mutate(artist_follower_of = "bakar")
+
+
+
+total_follows_list <- yeek_follows_cleaned %>% full_join(omar_follows_cleaned)
+total_follows_list <- total_follows_list%>% full_join(dom_follows_cleaned)
+total_follows_list <- total_follows_list %>% full_join(bakar_follows_cleaned)
+
+```
+
+
+- The follower list then saw each of the locations being separated into city and state/country, so as to analyze if there were any correlations between these specific variables and following the artist. After that, 
+```{r, echo = FALSE}
+
+total_follows_list3 <- total_follows_list %>% separate(location, c("city", "state/country"), ",") %>% select(`state/country`, city,year_of_grad, artist_follower_of)
+yeek_list <- total_follows_list3  %>% mutate(artist_yeek = ifelse(grepl("yeek", artist_follower_of), "0","1"))
+yeek_fit <- yeek_list %>% select(`state/country`, year_of_grad, artist_follower_of, artist_yeek) %>% group_by(artist_follower_of) %>% sample_n(851)
+
+omar_fit <- total_follows_list %>% mutate(artist_omar = ifelse(grepl("omar", artist_follower_of), "0","1")) %>% select(location, year_of_grad, artist_follower_of, artist_omar)%>% separate(location, c("city", "state/country"), ",") %>% select(`state/country`, year_of_grad, artist_follower_of, artist_omar) %>% group_by(artist_follower_of) %>% sample_n(851)
+
+dom_fit <- total_follows_list %>% mutate(artist_dom = ifelse(grepl("dom", artist_follower_of), "0","1")) %>% select(location, year_of_grad, artist_follower_of, artist_dom)%>% separate(location, c("city", "state/country"), ",") %>% select(`state/country`, year_of_grad, artist_follower_of, artist_dom) %>% group_by(artist_follower_of) %>% sample_n(851)
+
+bakar_fit <- total_follows_list %>% mutate(artist_bakar = ifelse(grepl("bakar", artist_follower_of), "0","1")) %>% select(location, year_of_grad, artist_follower_of, artist_bakar)%>% separate(location, c("city", "state/country"), ",") %>% select(`state/country`, year_of_grad, artist_follower_of, artist_bakar) %>% group_by(artist_follower_of) %>% sample_n(851)
+
+
+```
+
+
+
+
+- The multinomial logistic regressions for each indpendent fit were created for each artist and their following, and the variables that were explicitly compared were state/country and the year_of_grad, as these were the only real demographic data that was pulled from Twitter about each user, and the correlations between these would allow for the set-up of a good model concerning the correlation and characteristics of the followers for these 4 users. 
+```{r, echo = FALSE}
+
+fit1 <- multinom(artist_yeek ~ `state/country`  + year_of_grad, data = yeek_fit)
+View(exp(coef(fit1)))
+
+fit2 <- multinom(artist_omar ~ `state/country`  + year_of_grad, data = omar_fit)
+View(exp(coef(fit2)))
+
+fit3 <- multinom(artist_dom ~ `state/country`  + year_of_grad, data = dom_fit)
+View(exp(coef(fit3)))
+
+fit4 <- multinom(artist_bakar ~ `state/country`  + year_of_grad, data = bakar_fit)
+View(exp(coef(fit4)))
+
+
+```
+
+-The created lasso regularization tests which determined which variables were predictor variables for the multinomial logical regression model above for each artist. The results of each of these tests demonstrated that none of the variables that had been demonstrated above to have a correlation with the reference variable had no mathematically significant connection to the reference variable
+```{r, echo = FALSE}
+
+
+set.seed(1234)
+y <- as.matrix(yeek_fit$artist_yeek)
+x <- model.matrix(artist_yeek~ -1+., data=yeek_fit) 
+cv2<-cv.glmnet(x,y,family='multinomial') 
+lasso2<-glmnet(x,y,family='multinomial',lambda=cv2$lambda.1se) 
+View(coef(lasso2))
+
+
+z <- as.matrix(omar_fit$artist_omar)
+k <- model.matrix(artist_omar~ -1+., data=omar_fit) 
+cv3<-cv.glmnet(k,z,family='multinomial') 
+lasso3<-glmnet(k,z,family='multinomial',lambda=cv2$lambda.1se) 
+View(coef(lasso3))
+
+
+b <- as.matrix(dom_fit$artist_dom)
+a <- model.matrix(artist_dom~ -1+., data=dom_fit) 
+cv4<-cv.glmnet(a,b,family='multinomial') 
+lasso4<-glmnet(a,b,family='multinomial',lambda=cv2$lambda.1se) 
+View(coef(lasso4))
+
+d <- as.matrix(bakar_fit$artist_bakar)
+c <- model.matrix(artist_bakar~ -1+., data=bakar_fit) 
+cv5<-cv.glmnet(c,d,family='multinomial') 
+lasso5<-glmnet(c,d,family='multinomial',lambda=cv2$lambda.1se) 
+View(coef(lasso5))
+```
+
+
+
+- Frequency tables for each artists followers. Demonstrated that common characteristics did in fact exist between all 4 artists followers
+```{r, echo = FALSE}
+View(yeek_follows_cleaned %>% separate(location, c("city", "state/country"), ",") %>% group_by(`state/country`,city) %>% count() %>% filter( n>2))
+View(omar_follows_cleaned %>% separate(location, c("city", "state/country"), ",") %>% group_by(`state/country`,city) %>% count() %>% filter( n>2))
+View(dom_follows_cleaned %>% separate(location, c("city", "state/country"), ",") %>% group_by(`state/country`,city) %>% count() %>% filter( n>2))
+View(bakar_follows_cleaned %>% separate(location, c("city", "state/country"), ",") %>% group_by(`state/country`,city) %>% count() %>% filter( n>2))
+
+```
+
+- Frequency tables for the followed of each artists followers. Demonstrated that common characteristics did in fact exist between all 4 artists followers
+```{r, echo = FALSE}
+yeek_friends <- yeek_friends %>% mutate(artist_follower_of = "yeek")
+omar_friends <- omar_friends %>% mutate(artist_follower_of = "omar")
+dom_friends <- dom_friends %>% mutate(artist_follower_of = "dom")
+bakar_friends <- bakar_friends %>% mutate(artist_follower_of = "bakar")
+
+
+total_friends_list <- yeek_friends %>% full_join(omar_friends)
+total_friends_list <- total_friends_list%>% full_join(dom_friends)
+total_friends_list <- total_friends_list %>% full_join(bakar_friends)
+
+View(total_friends_list %>% group_by(screen_name, name) %>% count() %>% filter( n>2))
+```
+
